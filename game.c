@@ -5,6 +5,6 @@
 int main(){
     printf("hello world\n");
     TQDecisionTree* popo = TQ_build_tree("tq.txt");
-    printf("%p", popo);
+    printf("%p", popo->root);
     return 0;
 }

@@ -28,7 +28,16 @@ int count_questions(char* str){
 /// @param line 
 /// @param splitter 
 */
-void split(char* string, char splitter, char** sub_strings, int* number_words){
+char** split(char* string, char splitter){
+    //allocate space
+    int number_questions = count_questions(string);
+    char** sub_strings = (char**) calloc(number_questions, sizeof(char*));
+
+    //each question will not be more than 50
+    for (int i = 0; i < number_questions; i++ )
+    {
+        sub_strings[i] = (char*) calloc(50, sizeof(char));
+    }
     int length = 0;
     int start = 0;
 
@@ -48,7 +57,12 @@ void split(char* string, char splitter, char** sub_strings, int* number_words){
             start = i + 1;
         }
     }
-    *number_words = length;
+    return sub_strings;
+}
+
+TQDecisionTree* DT_create() { 
+  TQDecisionTree* dt = calloc(sizeof(TQDecisionTree), 1);
+  return dt;
 }
 
 //first
@@ -62,24 +76,26 @@ TQDecisionTree* TQ_build_tree(char* file_name)
         //num items
         if (index == 0){
             int shit = atoi(buffer);
-            printf("%d\n", shit);
+            printf("number of items: %d\n", shit);
         }
         //questions
         else if (index == 1){
-            int num_questions = count_questions(buffer);
-            char **arr = (char**) calloc(num_questions, sizeof(char*));
-            for (int i = 0; i < num_questions; i++ )
-            {
-                arr[i] = (char*) calloc(50, sizeof(char));
-            }
-            printf("%d\n", num_questions);
-            int num_questions2;
-            split(buffer, ',', arr, &num_questions2);
-            printf("%s\n", *arr);
+            char** questions = split(buffer, ',');
+            int num_questions = strlen(buffer);
+            printf("number of questions: %d\n", num_questions);
+            printf("first question: %s\n", questions[0]);
+        }
+        //finished reading important info
+        else if (index == 2){
+            break;
         }
         index++;
     }
-    return NULL;
+    fclose(file);
+
+    TQDecisionTree* dt = DT_create();
+    //for elemnts in questions, create a new node, insert
+    return dt;
 }
 
 //third
