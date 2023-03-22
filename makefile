@@ -3,4 +3,4 @@ tq.o: tq.c
 game: game.c
 	gcc -Wall -Werror -std=c11 tq.o game.c -o game
 clean: 
-	rm game tq.o
+	rm -f game tq.o
