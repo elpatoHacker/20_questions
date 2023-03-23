@@ -3,9 +3,45 @@
 #include <stdlib.h>
 #include <string.h>
 
+/// @brief 
+/// @param node 
+/// @param spaces 
+void TQ_print_tree_helper(TQDecisionTreeNode* node, int spaces){
+    //base case
+    if (node == NULL){
+        return;
+    }
+
+    if (node->text[0] == '\0'){
+        for (int i = 0; i < spaces; i++) {
+            printf(" "); // Print two spaces for each level of indentation
+        }
+        printf("-y->\n");
+        for (int i = 0; i < spaces; i++) {
+            printf(" "); // Print two spaces for each level of indentation
+        }
+        printf("-n->\n");
+    }
+    else{
+        for (int i = 0; i < spaces; i++) {
+            printf(" "); // Print two spaces for each level of indentation
+        }
+        printf("-y-> [%s]\n", node->yes->text);
+        TQ_print_tree_helper(node->yes, spaces + 4);
+
+        for (int i = 0; i < spaces; i++) {
+            printf(" "); // Print two spaces for each level of indentation
+        }
+        printf("-n-> [%s]\n", node->no->text);
+        TQ_print_tree_helper(node->no, spaces + 4);
+    }
+}
+
 //second
 void TQ_print_tree(TQDecisionTree* root)
 {
+    printf("[%s]\n", root->root->text);
+    TQ_print_tree_helper(root->root, 0);
 }
 
 /// @brief 
@@ -65,25 +101,61 @@ TQDecisionTree* DT_create() {
   return dt;
 }
 
+void DT_insert_helper(TQDecisionTreeNode* node, char* val) {
+    if (node->yes != NULL) {
+        DT_insert_helper(node->yes, val);
+    } else {
+        TQDecisionTreeNode* new_node = calloc(sizeof(TQDecisionTreeNode), 1);
+        strcpy(new_node->text, val);
+        new_node->num_answers = 0;
+        new_node->answers = NULL;
+
+        node->yes = new_node;
+    }
+
+    if (node->no != NULL) {
+        DT_insert_helper(node->no, val);
+    } else {
+        TQDecisionTreeNode* new_node = calloc(sizeof(TQDecisionTreeNode), 1);
+        strcpy(new_node->text, val);
+        new_node->num_answers = 0;
+        new_node->answers = NULL;
+
+        node->no = new_node;
+    }
+    return;
+}
+
+void DT_insert(TQDecisionTree* dt, char* val) {
+  if (dt->root == NULL) {
+    TQDecisionTreeNode* new_node = calloc(sizeof(TQDecisionTreeNode), 1);
+    strcpy(new_node->text, val);
+    new_node->num_answers = 0;
+    new_node->answers = NULL;
+
+    //set root to the first node
+    dt->root = new_node;
+    return;
+  }
+  DT_insert_helper(dt->root, val);
+}
+
 //first
 TQDecisionTree* TQ_build_tree(char* file_name)
 {
     FILE* file = fopen(file_name, "r");
 
+    //file information
+    char** questions = NULL;
+    int num_questions = 0;
+
     char buffer[128];
     int index = 0;
     while(fgets(buffer, 128, file) != NULL){
-        //num items
-        if (index == 0){
-            int shit = atoi(buffer);
-            printf("number of items: %d\n", shit);
-        }
         //questions
-        else if (index == 1){
-            char** questions = split(buffer, ',');
-            int num_questions = strlen(buffer);
-            printf("number of questions: %d\n", num_questions);
-            printf("first question: %s\n", questions[0]);
+        if (index == 1){
+            questions = split(buffer, ',');
+            num_questions = count_questions(buffer);
         }
         //finished reading important info
         else if (index == 2){
@@ -94,7 +166,11 @@ TQDecisionTree* TQ_build_tree(char* file_name)
     fclose(file);
 
     TQDecisionTree* dt = DT_create();
-    //for elemnts in questions, create a new node, insert
+
+    //populate tree
+    for (int i = 0; i < num_questions; i++){
+        DT_insert(dt, questions[i]);
+    }
     return dt;
 }
 
