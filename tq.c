@@ -3,6 +3,20 @@
 #include <stdlib.h>
 #include <string.h>
 
+void TQ_print_branch(char* sentence) {
+    if (sentence == NULL){
+        return;
+    }
+    
+    int index = 0;
+    while (sentence[index] != '\0'){
+        if (sentence[index] != '\n'){
+            printf("%c", sentence[index]);
+        }
+        index++;
+    }
+}
+
 /// @brief 
 /// @param node 
 /// @param spaces 
@@ -26,13 +40,18 @@ void TQ_print_tree_helper(TQDecisionTreeNode* node, int spaces){
         for (int i = 0; i < spaces; i++) {
             printf(" "); // Print two spaces for each level of indentation
         }
-        printf("-y-> [%s]\n", node->yes->text);
+        printf("-y-> [");
+        char* perro = node->yes->text;
+        TQ_print_branch(perro);
+        printf("]\n");
         TQ_print_tree_helper(node->yes, spaces + 4);
 
         for (int i = 0; i < spaces; i++) {
             printf(" "); // Print two spaces for each level of indentation
         }
-        printf("-n-> [%s]\n", node->no->text);
+        printf("-n-> [");
+        TQ_print_branch(node->no->text);
+        printf("]\n");
         TQ_print_tree_helper(node->no, spaces + 4);
     }
 }
