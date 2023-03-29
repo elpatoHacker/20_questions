@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+/// @brief 
+/// @param sentence 
 void TQ_print_branch(char* sentence) {
     if (sentence == NULL){
         return;
@@ -26,7 +28,7 @@ void TQ_print_tree_helper(TQDecisionTreeNode* node, int spaces){
         return;
     }
 
-    if (node->text[0] == '\0'){
+    if (node->answers != NULL){
         for (int i = 0; i < spaces; i++) {
             printf(" "); // Print two spaces for each level of indentation
         }
@@ -120,6 +122,9 @@ TQDecisionTree* DT_create() {
   return dt;
 }
 
+/// @brief 
+/// @param node 
+/// @param val 
 void DT_insert_helper(TQDecisionTreeNode* node, char* val) {
     if (node->yes != NULL) {
         DT_insert_helper(node->yes, val);
@@ -145,6 +150,9 @@ void DT_insert_helper(TQDecisionTreeNode* node, char* val) {
     return;
 }
 
+/// @brief 
+/// @param dt 
+/// @param val 
 void DT_insert(TQDecisionTree* dt, char* val) {
   if (dt->root == NULL) {
     TQDecisionTreeNode* new_node = calloc(sizeof(TQDecisionTreeNode), 1);
@@ -193,9 +201,67 @@ TQDecisionTree* TQ_build_tree(char* file_name)
     return dt;
 }
 
+void DT_insert_answer(TQDecisionTree* tree, char* answer, int num_questions){
+    char copy[128];
+    strcpy(copy, answer);
+    char* item = strtok(copy, ",");
+
+    char* path = &(strchr(answer, ','))[1];
+    printf("\nitem: %s\n", item);
+    printf("path: %s", path);
+    printf("og: %s", answer);
+}
+
 //third
 void TQ_populate_tree(TQDecisionTree* tree, char* file_name)
 {
+    FILE* file = fopen(file_name, "r");
+
+    //file information
+    int num_answers = 0;
+    char** answers = NULL;
+    int num_questions = 0;
+
+    char buffer[128];
+    int answers_index = 0;
+    int index = 0;
+    while(fgets(buffer, 128, file) != NULL){
+        if (index == 0){
+            num_answers = atoi(buffer);
+            
+            //allocate memory for each line that contains an answer
+            answers = (char**) calloc(num_answers, sizeof(char*));
+            //each answer line will not be more than 128 chars
+            for (int i = 0; i < num_answers; i++ )
+            {
+                answers[i] = (char*) calloc(128, sizeof(char));
+            }
+        }
+        else if (index == 1){
+            num_questions = count_questions(buffer);
+        }
+        else{
+            strcpy(answers[answers_index], buffer);
+            answers_index++;
+        }
+        index++;
+    }
+    fclose(file);
+
+    //print answers array
+    printf("\n");
+    for (int i = 0; i < num_answers; i++){
+        int j = 0;
+        while (answers[i][j] != '\0'){
+            if (answers[i][j] != '\n'){
+                printf("%c", answers[i][j]);
+            }
+            j++;
+        }
+        printf("\n");
+    }
+    DT_insert_answer(tree, answers[0], num_questions);
+    
 }
 
 //fourth
