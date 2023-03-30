@@ -201,6 +201,53 @@ TQDecisionTree* TQ_build_tree(char* file_name)
     return dt;
 }
 
+/*
+after finishing this function I need to rewrite print function. other than that. we good
+*/
+
+/// @brief 
+/// @param node 
+/// @param path 
+/// @param item 
+/// @param num_questions 
+/// @param index 
+void DT_insert_answer_helper(TQDecisionTreeNode* node, char* path, char* item, int num_questions, int index){
+
+    if (num_questions == 1){
+        if (path[index] == '1'){
+            printf("done\n");
+            if (node->yes == NULL){
+                //create new one, malloc answers, and add item.
+            }
+            else{
+                //just add item
+            }
+        }
+        else{
+            printf("done2\n");
+            if (node->no == NULL){
+                //create new one, malloc answers, and add item.
+            }
+            else{
+                //just add item
+            }
+        }
+    }else{
+        if (path[index] == '1'){
+            TQ_print_branch(node->text);
+            printf(" 1 ");
+            printf("-> ");
+            DT_insert_answer_helper(node->yes, path, item, num_questions - 1, index + 2);
+        }
+        else{
+            TQ_print_branch(node->text);
+            printf(" 0 ");
+            printf("-> ");
+            DT_insert_answer_helper(node->no, path, item, num_questions - 1, index + 2);
+        }
+    }
+}
+
 void DT_insert_answer(TQDecisionTree* tree, char* answer, int num_questions){
     char copy[128];
     strcpy(copy, answer);
@@ -209,7 +256,8 @@ void DT_insert_answer(TQDecisionTree* tree, char* answer, int num_questions){
     char* path = &(strchr(answer, ','))[1];
     printf("\nitem: %s\n", item);
     printf("path: %s", path);
-    printf("og: %s", answer);
+    printf("og: %s\n", answer);
+    DT_insert_answer_helper(tree->root, path, item, num_questions, 0);
 }
 
 //third
