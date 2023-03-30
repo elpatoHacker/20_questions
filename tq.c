@@ -211,13 +211,23 @@ after finishing this function I need to rewrite print function. other than that.
 /// @param item 
 /// @param num_questions 
 /// @param index 
-void DT_insert_answer_helper(TQDecisionTreeNode* node, char* path, char* item, int num_questions, int index){
+void DT_insert_answer_helper(TQDecisionTreeNode* node, char* path, char* item, int num_questions, int index, int num_answers){
 
     if (num_questions == 1){
         if (path[index] == '1'){
             printf("done\n");
             if (node->yes == NULL){
                 //create new one, malloc answers, and add item.
+
+                //allocate memory for each line that contains an answer
+                char** answers = (char**) calloc(num_answers, sizeof(char*));
+                //each answer line will not be more than 128 chars
+                for (int i = 0; i < num_answers; i++ )
+                {
+                    answers[i] = (char*) calloc(128, sizeof(char));
+                }
+
+                
             }
             else{
                 //just add item
@@ -248,7 +258,7 @@ void DT_insert_answer_helper(TQDecisionTreeNode* node, char* path, char* item, i
     }
 }
 
-void DT_insert_answer(TQDecisionTree* tree, char* answer, int num_questions){
+void DT_insert_answer(TQDecisionTree* tree, char* answer, int num_questions, int num_answers){
     char copy[128];
     strcpy(copy, answer);
     char* item = strtok(copy, ",");
@@ -257,7 +267,7 @@ void DT_insert_answer(TQDecisionTree* tree, char* answer, int num_questions){
     printf("\nitem: %s\n", item);
     printf("path: %s", path);
     printf("og: %s\n", answer);
-    DT_insert_answer_helper(tree->root, path, item, num_questions, 0);
+    DT_insert_answer_helper(tree->root, path, item, num_questions, 0, num_answers);
 }
 
 //third
@@ -308,7 +318,7 @@ void TQ_populate_tree(TQDecisionTree* tree, char* file_name)
         }
         printf("\n");
     }
-    DT_insert_answer(tree, answers[0], num_questions);
+    DT_insert_answer(tree, answers[0], num_questions, num_answers);
     
 }
 
