@@ -28,33 +28,48 @@ void TQ_print_tree_helper(TQDecisionTreeNode* node, int spaces){
         return;
     }
 
-    if (node->answers != NULL){
-        for (int i = 0; i < spaces; i++) {
-            printf(" "); // Print two spaces for each level of indentation
-        }
-        printf("-y->\n");
-        for (int i = 0; i < spaces; i++) {
-            printf(" "); // Print two spaces for each level of indentation
-        }
-        printf("-n->\n");
+    for (int i = 0; i < spaces; i++) {
+        printf(" "); // Print two spaces for each level of indentation
     }
-    else{
-        for (int i = 0; i < spaces; i++) {
-            printf(" "); // Print two spaces for each level of indentation
-        }
+
+    if (node->yes != NULL){
         printf("-y-> [");
-        char* perro = node->yes->text;
-        TQ_print_branch(perro);
+        TQ_print_branch(node->yes->text);
         printf("]\n");
         TQ_print_tree_helper(node->yes, spaces + 4);
-
-        for (int i = 0; i < spaces; i++) {
-            printf(" "); // Print two spaces for each level of indentation
+    }
+    else{
+        printf("-y->");
+        if (node->answers == NULL){
+            printf("\n");
+            return;
         }
+        printf(" | ");
+        printf("%s", node->answers[0]);
+        printf(" |\n");
+        return;
+    }
+
+    for (int i = 0; i < spaces; i++) {
+        printf(" "); // Print two spaces for each level of indentation
+    }
+
+    if (node->no != NULL){
         printf("-n-> [");
         TQ_print_branch(node->no->text);
         printf("]\n");
         TQ_print_tree_helper(node->no, spaces + 4);
+    }
+    else{
+        printf("-n->");
+        if (node->answers == NULL){
+            printf("\n");
+            return;
+        }
+        printf(" | ");
+        printf("%s", node->answers[0]);
+        printf(" |\n");
+        return;
     }
 }
 
@@ -201,10 +216,6 @@ TQDecisionTree* TQ_build_tree(char* file_name)
     return dt;
 }
 
-/*
-after finishing this function I need to rewrite print function. other than that. we good
-*/
-
 /// @brief 
 /// @param node 
 /// @param path 
@@ -226,9 +237,9 @@ void DT_insert_answer_helper(TQDecisionTreeNode* node, char* path, char* item, i
                 {
                     items[i] = (char*) calloc(128, sizeof(char));
                 }
-                items[0] = item;
+                strcpy(items[0], item);
 
-                TQDecisionTreeNode* new_node = calloc(1, sizeof(TQDecisionTreeNode));
+                TQDecisionTreeNode* new_node = calloc(sizeof(TQDecisionTreeNode), 1);
                 new_node->num_answers = 1;
                 new_node->answers = items;
 
@@ -237,9 +248,9 @@ void DT_insert_answer_helper(TQDecisionTreeNode* node, char* path, char* item, i
             }
             else{
                 //just add item
-                printf("caca yes: %s\n", node->yes->answers[0]);
-                //node->yes->answers[node->yes->num_answers] = item;
-                //node->yes->num_answers++;
+                printf("append to yes: %s\n", item);
+                strcpy(node->yes->answers[node->yes->num_answers], item);
+                node->yes->num_answers++;
             }
         }
         else{
@@ -254,7 +265,7 @@ void DT_insert_answer_helper(TQDecisionTreeNode* node, char* path, char* item, i
                 {
                     items[i] = (char*) calloc(128, sizeof(char));
                 }
-                items[0] = item;
+                strcpy(items[0], item);
 
                 TQDecisionTreeNode* new_node = calloc(sizeof(TQDecisionTreeNode), 1);
                 new_node->num_answers = 1;
@@ -265,7 +276,9 @@ void DT_insert_answer_helper(TQDecisionTreeNode* node, char* path, char* item, i
             }
             else{
                 //just add item
-                printf("caca no: %d\n", node->no->num_answers);
+                printf("append to no: %s\n", item);
+                strcpy(node->no->answers[node->no->num_answers], item);
+                node->no->num_answers++;
             }
         }
     }else{
@@ -291,8 +304,6 @@ void DT_insert_answer(TQDecisionTree* tree, char* answer, int num_questions, int
 
     char* path = &(strchr(answer, ','))[1];
     printf("\nitem: %s\n", item);
-    // printf("path: %s\n", path);
-    // printf("og: %s\n", answer);
     DT_insert_answer_helper(tree->root, path, item, num_questions, 0, num_answers);
 }
 
@@ -344,8 +355,9 @@ void TQ_populate_tree(TQDecisionTree* tree, char* file_name)
         }
         printf("\n");
     }
-    DT_insert_answer(tree, answers[8], num_questions, num_answers);
-    DT_insert_answer(tree, answers[9], num_questions, num_answers);
+    for (int i = 0; i < num_answers; i++){
+        DT_insert_answer(tree, answers[i], num_questions, num_answers);
+    }
     
 }
 

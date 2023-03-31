@@ -5,8 +5,10 @@
 int main(){
     TQDecisionTree* popo = TQ_build_tree("tq.txt");
     TQ_print_tree(popo);
-
     TQ_populate_tree(popo, "tq.txt");
+    TQ_print_tree(popo);
+
+    
     // printf("\n[%s]\n", (popo->root->text));
     // printf("-y-> [%s]\n", (popo->root->yes->text));
     // printf("    -y-> [%s]\n", (popo->root->yes->yes->text));
