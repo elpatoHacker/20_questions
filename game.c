@@ -10,6 +10,11 @@ int main(int argc, char* argv[]){
     TQDecisionTree* popo = TQ_build_tree(argv[1]);
     TQ_populate_tree(popo, argv[1]);
 
+    TQDecisionTree* cur = popo;
+    while (cur != NULL){
+        printf()
+    }
+
     TQ_free_tree(popo);
     return 0;
 }
