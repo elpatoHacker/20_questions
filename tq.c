@@ -3,6 +3,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+int number_of_questions = 0;
+int number_of_answers = 0;
+
 /// @brief 
 /// @param sentence 
 void TQ_print_branch(char* sentence) {
@@ -321,6 +324,7 @@ void TQ_populate_tree(TQDecisionTree* tree, char* file_name)
     while(fgets(buffer, 128, file) != NULL){
         if (index == 0){
             num_answers = atoi(buffer);
+            number_of_answers = num_answers;
             
             //allocate memory for each line that contains an answer
             answers = (char**) calloc(num_answers, sizeof(char*));
@@ -332,6 +336,7 @@ void TQ_populate_tree(TQDecisionTree* tree, char* file_name)
         }
         else if (index == 1){
             num_questions = count_questions(buffer);
+            number_of_questions = num_questions;
         }
         else{
             strcpy(answers[answers_index], buffer);
@@ -356,10 +361,32 @@ void TQ_populate_tree(TQDecisionTree* tree, char* file_name)
     for (int i = 0; i < num_answers; i++){
         DT_insert_answer(tree, answers[i], num_questions, num_answers);
     }
+
+    //free
+    for (int i = 0; i < num_answers; i++) {
+        free(answers[i]);
+    }
+    free(answers);
+}
+
+void TQ_free_tree_helper(TQDecisionTreeNode* root){
+    if (root == NULL){
+        return;
+    }
+    TQ_free_tree_helper(root->no);
+    TQ_free_tree_helper(root->yes);
+    for (int i = 0; i < root->num_answers; i++) {
+        free(root->answers[i]);
+    }
+    free(root->answers);
+    free(root);
 }
 
 //fourth
 void TQ_free_tree(TQDecisionTree* tree)
 {
-    
+    if (tree == NULL){
+        return;
+    }
+    TQ_free_tree_helper(tree->root);
 }
