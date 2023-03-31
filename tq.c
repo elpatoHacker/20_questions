@@ -24,53 +24,56 @@ void TQ_print_branch(char* sentence) {
 /// @param spaces 
 void TQ_print_tree_helper(TQDecisionTreeNode* node, int spaces){
     //base case
-    if (node == NULL){
+    if (node == NULL || (node->yes == NULL && node->no == NULL)){
         return;
     }
 
+    
     for (int i = 0; i < spaces; i++) {
-        printf(" "); // Print two spaces for each level of indentation
+        printf(" ");
     }
-
-    if (node->yes != NULL){
-        printf("-y-> [");
+    printf("-y-> ");
+    if (node->yes->num_answers == 0){
+        printf("[");
         TQ_print_branch(node->yes->text);
         printf("]\n");
-        TQ_print_tree_helper(node->yes, spaces + 4);
+    }
+    else if (node->yes->num_answers == -1){
+        printf("\n");
     }
     else{
-        printf("-y->");
-        if (node->answers == NULL){
-            printf("\n");
-            return;
+        printf("|");
+        for (int i = 0; i < node->yes->num_answers; i++){
+            printf(" ");
+            TQ_print_branch(node->yes->answers[i]);
+            printf(" |");
         }
-        printf(" | ");
-        printf("%s", node->answers[0]);
-        printf(" |\n");
-        return;
+        printf("\n");
     }
+    TQ_print_tree_helper(node->yes, spaces + 4);
 
     for (int i = 0; i < spaces; i++) {
-        printf(" "); // Print two spaces for each level of indentation
+        printf(" ");
     }
-
-    if (node->no != NULL){
-        printf("-n-> [");
+    printf("-n-> ");
+    if (node->no->num_answers == 0){
+        printf("[");
         TQ_print_branch(node->no->text);
         printf("]\n");
-        TQ_print_tree_helper(node->no, spaces + 4);
+    }
+    else if (node->no->num_answers == -1){
+        printf("\n");
     }
     else{
-        printf("-n->");
-        if (node->answers == NULL){
-            printf("\n");
-            return;
+        printf("|");
+        for (int i = 0; i < node->no->num_answers; i++){
+            printf(" ");
+            TQ_print_branch(node->no->answers[i]);
+            printf(" |");
         }
-        printf(" | ");
-        printf("%s", node->answers[0]);
-        printf(" |\n");
-        return;
+        printf("\n");
     }
+    TQ_print_tree_helper(node->no, spaces + 4);
 }
 
 //second
@@ -132,11 +135,6 @@ char** split(char* string, char splitter){
     return sub_strings;
 }
 
-TQDecisionTree* DT_create() { 
-  TQDecisionTree* dt = calloc(sizeof(TQDecisionTree), 1);
-  return dt;
-}
-
 /// @brief 
 /// @param node 
 /// @param val 
@@ -182,6 +180,23 @@ void DT_insert(TQDecisionTree* dt, char* val) {
   DT_insert_helper(dt->root, val);
 }
 
+void DT_insert_leafs(TQDecisionTreeNode* node){
+    if (node->yes == NULL){
+        TQDecisionTreeNode* yes_new_node = calloc(sizeof(TQDecisionTreeNode), 1);
+        yes_new_node->num_answers = -1;
+        node->yes = yes_new_node;
+
+        TQDecisionTreeNode* no_new_node = calloc(sizeof(TQDecisionTreeNode), 1);
+        no_new_node->num_answers = -1;
+        node->no = no_new_node;
+    }
+    else{
+        //insert right and left leafs
+        DT_insert_leafs(node->yes);
+        DT_insert_leafs(node->no);
+    }
+}
+
 //first
 TQDecisionTree* TQ_build_tree(char* file_name)
 {
@@ -191,6 +206,7 @@ TQDecisionTree* TQ_build_tree(char* file_name)
     char** questions = NULL;
     int num_questions = 0;
 
+    //read in question into array
     char buffer[128];
     int index = 0;
     while(fgets(buffer, 128, file) != NULL){
@@ -207,12 +223,13 @@ TQDecisionTree* TQ_build_tree(char* file_name)
     }
     fclose(file);
 
-    TQDecisionTree* dt = DT_create();
+    TQDecisionTree* dt = calloc(sizeof(TQDecisionTree), 1);
 
     //populate tree
     for (int i = 0; i < num_questions; i++){
         DT_insert(dt, questions[i]);
     }
+    DT_insert_leafs(dt->root);
     return dt;
 }
 
@@ -226,9 +243,8 @@ void DT_insert_answer_helper(TQDecisionTreeNode* node, char* path, char* item, i
 
     if (num_questions == 1){
         if (path[index] == '1'){
-            if (node->yes == NULL){
+            if (node->yes->answers == NULL){
                 //create new one, malloc answers, and add item.
-                printf("caca first yes: %s\n", item);
 
                 //allocate memory for each line that contains an answer
                 char** items = (char**) calloc(num_answers, sizeof(char*));
@@ -238,25 +254,19 @@ void DT_insert_answer_helper(TQDecisionTreeNode* node, char* path, char* item, i
                     items[i] = (char*) calloc(128, sizeof(char));
                 }
                 strcpy(items[0], item);
-
-                TQDecisionTreeNode* new_node = calloc(sizeof(TQDecisionTreeNode), 1);
-                new_node->num_answers = 1;
-                new_node->answers = items;
-
-                //set root to the new node
-                node->yes = new_node;
+                node->yes->num_answers = 1;
+                node->yes->answers = items;
+                
             }
             else{
                 //just add item
-                printf("append to yes: %s\n", item);
                 strcpy(node->yes->answers[node->yes->num_answers], item);
                 node->yes->num_answers++;
             }
         }
         else{
-            if (node->no == NULL){
+            if (node->no->answers == NULL){
                 //create new one, malloc answers, and add item.
-                printf("caca first no: %s\n", node->text);
 
                 //allocate memory for each line that contains an answer
                 char** items = (char**) calloc(num_answers, sizeof(char*));
@@ -266,32 +276,21 @@ void DT_insert_answer_helper(TQDecisionTreeNode* node, char* path, char* item, i
                     items[i] = (char*) calloc(128, sizeof(char));
                 }
                 strcpy(items[0], item);
-
-                TQDecisionTreeNode* new_node = calloc(sizeof(TQDecisionTreeNode), 1);
-                new_node->num_answers = 1;
-                new_node->answers = items;
-
-                //set root to the new node
-                node->no = new_node;
+                node->no->num_answers = 1;
+                node->no->answers = items;
+                
             }
             else{
                 //just add item
-                printf("append to no: %s\n", item);
                 strcpy(node->no->answers[node->no->num_answers], item);
                 node->no->num_answers++;
             }
         }
     }else{
         if (path[index] == '1'){
-            TQ_print_branch(node->text);
-            printf(" 1 ");
-            printf("-> ");
             DT_insert_answer_helper(node->yes, path, item, num_questions - 1, index + 2, num_answers);
         }
         else{
-            TQ_print_branch(node->text);
-            printf(" 0 ");
-            printf("-> ");
             DT_insert_answer_helper(node->no, path, item, num_questions - 1, index + 2, num_answers);
         }
     }
@@ -303,7 +302,6 @@ void DT_insert_answer(TQDecisionTree* tree, char* answer, int num_questions, int
     char* item = strtok(copy, ",");
 
     char* path = &(strchr(answer, ','))[1];
-    printf("\nitem: %s\n", item);
     DT_insert_answer_helper(tree->root, path, item, num_questions, 0, num_answers);
 }
 
@@ -344,24 +342,24 @@ void TQ_populate_tree(TQDecisionTree* tree, char* file_name)
     fclose(file);
 
     //print answers array
-    printf("\n");
-    for (int i = 0; i < num_answers; i++){
-        int j = 0;
-        while (answers[i][j] != '\0'){
-            if (answers[i][j] != '\n'){
-                printf("%c", answers[i][j]);
-            }
-            j++;
-        }
-        printf("\n");
-    }
+    // printf("\n");
+    // for (int i = 0; i < num_answers; i++){
+    //     int j = 0;
+    //     while (answers[i][j] != '\0'){
+    //         if (answers[i][j] != '\n'){
+    //             printf("%c", answers[i][j]);
+    //         }
+    //         j++;
+    //     }
+    //     printf("\n");
+    // }
     for (int i = 0; i < num_answers; i++){
         DT_insert_answer(tree, answers[i], num_questions, num_answers);
     }
-    
 }
 
 //fourth
 void TQ_free_tree(TQDecisionTree* tree)
 {
+    
 }
