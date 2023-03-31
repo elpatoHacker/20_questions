@@ -215,31 +215,57 @@ void DT_insert_answer_helper(TQDecisionTreeNode* node, char* path, char* item, i
 
     if (num_questions == 1){
         if (path[index] == '1'){
-            printf("done\n");
             if (node->yes == NULL){
                 //create new one, malloc answers, and add item.
+                printf("caca first yes: %s\n", item);
 
                 //allocate memory for each line that contains an answer
-                char** answers = (char**) calloc(num_answers, sizeof(char*));
+                char** items = (char**) calloc(num_answers, sizeof(char*));
                 //each answer line will not be more than 128 chars
                 for (int i = 0; i < num_answers; i++ )
                 {
-                    answers[i] = (char*) calloc(128, sizeof(char));
+                    items[i] = (char*) calloc(128, sizeof(char));
                 }
+                items[0] = item;
 
-                
+                TQDecisionTreeNode* new_node = calloc(1, sizeof(TQDecisionTreeNode));
+                new_node->num_answers = 1;
+                new_node->answers = items;
+
+                //set root to the new node
+                node->yes = new_node;
             }
             else{
                 //just add item
+                printf("caca yes: %s\n", node->yes->answers[0]);
+                //node->yes->answers[node->yes->num_answers] = item;
+                //node->yes->num_answers++;
             }
         }
         else{
-            printf("done2\n");
             if (node->no == NULL){
                 //create new one, malloc answers, and add item.
+                printf("caca first no: %s\n", node->text);
+
+                //allocate memory for each line that contains an answer
+                char** items = (char**) calloc(num_answers, sizeof(char*));
+                //each answer line will not be more than 128 chars
+                for (int i = 0; i < num_answers; i++ )
+                {
+                    items[i] = (char*) calloc(128, sizeof(char));
+                }
+                items[0] = item;
+
+                TQDecisionTreeNode* new_node = calloc(sizeof(TQDecisionTreeNode), 1);
+                new_node->num_answers = 1;
+                new_node->answers = items;
+
+                //set root to the new node
+                node->no = new_node;
             }
             else{
                 //just add item
+                printf("caca no: %d\n", node->no->num_answers);
             }
         }
     }else{
@@ -247,13 +273,13 @@ void DT_insert_answer_helper(TQDecisionTreeNode* node, char* path, char* item, i
             TQ_print_branch(node->text);
             printf(" 1 ");
             printf("-> ");
-            DT_insert_answer_helper(node->yes, path, item, num_questions - 1, index + 2);
+            DT_insert_answer_helper(node->yes, path, item, num_questions - 1, index + 2, num_answers);
         }
         else{
             TQ_print_branch(node->text);
             printf(" 0 ");
             printf("-> ");
-            DT_insert_answer_helper(node->no, path, item, num_questions - 1, index + 2);
+            DT_insert_answer_helper(node->no, path, item, num_questions - 1, index + 2, num_answers);
         }
     }
 }
@@ -265,8 +291,8 @@ void DT_insert_answer(TQDecisionTree* tree, char* answer, int num_questions, int
 
     char* path = &(strchr(answer, ','))[1];
     printf("\nitem: %s\n", item);
-    printf("path: %s", path);
-    printf("og: %s\n", answer);
+    // printf("path: %s\n", path);
+    // printf("og: %s\n", answer);
     DT_insert_answer_helper(tree->root, path, item, num_questions, 0, num_answers);
 }
 
@@ -318,7 +344,8 @@ void TQ_populate_tree(TQDecisionTree* tree, char* file_name)
         }
         printf("\n");
     }
-    DT_insert_answer(tree, answers[0], num_questions, num_answers);
+    DT_insert_answer(tree, answers[8], num_questions, num_answers);
+    DT_insert_answer(tree, answers[9], num_questions, num_answers);
     
 }
 
