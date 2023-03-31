@@ -233,6 +233,11 @@ TQDecisionTree* TQ_build_tree(char* file_name)
         DT_insert(dt, questions[i]);
     }
     DT_insert_leafs(dt->root);
+
+    for (int i = 0; i < num_questions; i++){
+        free(questions[i]);
+    }
+    free(questions);
     return dt;
 }
 
@@ -375,10 +380,19 @@ void TQ_free_tree_helper(TQDecisionTreeNode* root){
     }
     TQ_free_tree_helper(root->no);
     TQ_free_tree_helper(root->yes);
-    for (int i = 0; i < root->num_answers; i++) {
-        free(root->answers[i]);
+    if (root->num_answers == 0){
+        //noop
     }
-    free(root->answers);
+    else if (root->num_answers == -1){
+        //noop
+    }
+    else{
+        //root->num_answers
+        for (int i = 0; i < number_of_answers; i++) {
+            free(root->answers[i]);
+        }
+        free(root->answers);
+    }
     free(root);
 }
 
@@ -389,4 +403,5 @@ void TQ_free_tree(TQDecisionTree* tree)
         return;
     }
     TQ_free_tree_helper(tree->root);
+    free(tree);
 }
